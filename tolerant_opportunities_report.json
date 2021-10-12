@@ -1,0 +1,1 @@
+{"ANNOTATIONS.TARGET_COMPANY": {"precision": 0, "recall": 0.0, "f1-score": 0, "imprecision_rate": 0, "support": 7}, "ANNOTATIONS.BUYER_COMPANY": {"precision": 0, "recall": 0.0, "f1-score": 0, "imprecision_rate": 0, "support": 10}, "ANNOTATIONS.SELLER_COMPANY": {"precision": 0, "recall": 0.0, "f1-score": 0, "imprecision_rate": 0, "support": 2}}
