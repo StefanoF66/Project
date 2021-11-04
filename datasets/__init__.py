@@ -8,7 +8,6 @@ from transformers import BertTokenizer
 from transformers import RobertaTokenizer
 
 from keras.preprocessing.sequence import pad_sequences
-#xiai
 
 from utils.preprocessing import tokenize_and_preserve_labels, tokenize_and_preserve_labels_sentencepiece
 from utils.preprocessing import SentenceGetter, split_snt_in_chunks
@@ -41,17 +40,25 @@ class TransformerFromConllDFDataModule(pl.LightningDataModule):
         self.tag2idx, self.idx2tag = {}, {}
         self.n_classes = -1
 
-
         # load the data
+        '''
         self.train_df = self.get_dataframe(self.train_path, sample_perc=self.sample_perc)
         self.val_df = self.get_dataframe(self.val_path, sample_perc=self.sample_perc)
         self.test_df = self.get_dataframe(self.test_path, sample_perc=self.sample_perc)
-
-        '''# overfitting for DEBUG fixme
-        self.train_df = self.train_df.iloc[10000:self.train_df.shape[0]//100]
-        self.val_df = self.train_df
-        self.test_df = self.train_df
         '''
+
+        #'''
+        # load the data only for test
+        self.train_df = self.get_dataframe(self.train_path, sample_perc=self.sample_perc).head(100)
+        self.val_df = self.get_dataframe(self.val_path, sample_perc=self.sample_perc).head(100)
+        self.test_df = self.get_dataframe(self.test_path, sample_perc=self.sample_perc).head(100)
+        #'''
+
+        # overfitting for DEBUG fixme
+        # self.train_df = self.train_df.iloc[10000:self.train_df.shape[0]//100]
+        # self.val_df = self.train_df
+        # self.test_df = self.train_df
+
 
 
         # create class dictionary
@@ -61,11 +68,6 @@ class TransformerFromConllDFDataModule(pl.LightningDataModule):
 
         self.docid2idx = self.get_dict_from_column((self.train_df, self.val_df, self.test_df), column="doc_id")
         self.idx2docid = dict(zip(self.docid2idx.values(), self.docid2idx.keys()))
-
-        # to testing
-        self.train_df = self.train_df.truncate(before=0,after=10000)
-        self.val_df = self.val_df.truncate(before=0,after=10000)
-        self.test_df = self.test_df.truncate(before=0,after=10000)
 
     def setup(self, stage: Optional[str] = None) -> None:
         # sets train, val and test sets
@@ -147,7 +149,7 @@ class TransformerFromConllDFDataModule(pl.LightningDataModule):
 
         dataset = TensorDataset(tr_inputs, tr_masks, tr_labels, tr_docs)
         sampler = RandomSampler(dataset) if sampler_cls == "rand" else SequentialSampler(dataset)
-        return DataLoader(dataset, sampler=sampler, batch_size=batch_size)
+        return DataLoader(dataset, sampler=sampler, batch_size=batch_size, num_workers= 3, shuffle=False)
 
     def train_dataloader(self) -> DataLoader:
         return self.make_dataloader(self.train_set, self.batch_train_size)

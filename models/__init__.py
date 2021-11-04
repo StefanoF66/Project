@@ -1,6 +1,7 @@
 import abc
 import torch
 import pytorch_lightning as pl
+import torchmetrics
 from transformers import AdamW
 from seqeval.metrics import f1_score, accuracy_score, recall_score, precision_score
 
@@ -19,6 +20,7 @@ class TransformerModule(pl.LightningModule, metaclass=abc.ABCMeta):
         self.predictions = []
         self.docs = []
         self.idx2tag = kwargs.get("idx2tag", None)
+        self.tokenizer = kwargs.get("tokenizer", None)
 
     def on_epoch_start(self) -> None:
         self.predictions = []
@@ -63,19 +65,17 @@ class TransformerModule(pl.LightningModule, metaclass=abc.ABCMeta):
         for i in range(len(unpadded_true_labels)):
             unpadded_pred_labels[i] = unpadded_pred_labels[i][:len(unpadded_true_labels[i])]
 
-        f1 = f1_score(unpadded_true_labels,unpadded_pred_labels,average='macro')
+        f1 = f1_score(unpadded_true_labels, unpadded_pred_labels, average='micro')
         acc = accuracy_score(unpadded_true_labels, unpadded_pred_labels)
-        prec = precision_score(unpadded_true_labels, unpadded_pred_labels, average='macro')
-        rec = recall_score(unpadded_true_labels, unpadded_pred_labels, average='macro')
+        prec = precision_score(unpadded_true_labels, unpadded_pred_labels, average='micro')
+        rec = recall_score(unpadded_true_labels, unpadded_pred_labels, average='micro')
 
 
         self.log("loss", outputs["loss"])
-        self.log("f1_score", f1, on_epoch=True,logger=True, prog_bar=True)
+        self.log("f1_score", f1, on_epoch=True, logger=True, prog_bar=True)
         self.log("accuracy", acc, on_epoch=True, logger=True, prog_bar=True)
         self.log("precision", prec, on_epoch=True, logger=True, prog_bar=True)
         self.log("recall", rec, on_epoch=True, logger=True, prog_bar=True)
-
-
 
 
         return outputs
